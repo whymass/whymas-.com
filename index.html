@@ -144,5 +144,40 @@
     </iframe>
   </div>
 
+  <script>
+    async function actualizarTopYoutube() {
+      const apiKey = 'TU_API_KEY_YOUTUBE';  // Pega tu API Key aquí
+      const channelId = 'UCDBk6MMaxQ0F8mARONsW1lg';
+
+      const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=viewCount&maxResults=1&type=video`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+          const videoId = data.items[0].id.videoId;
+          const iframeYT = document.querySelector('iframe[src*="youtube.com"]');
+          iframeYT.src = `https://www.youtube.com/embed/${videoId}`;
+        }
+      } catch (error) {
+        console.error('Error al obtener video de YouTube:', error);
+      }
+    }
+
+    function actualizarSoundcloudLista() {
+      // Cambiar iframe SoundCloud para mostrar lista completa de canciones del usuario
+      const userUrlEncoded = encodeURIComponent('https://soundcloud.com/ezequiel-guaymas-959051410');
+      const iframeSC = document.querySelector('.soundcloud-embed iframe');
+      iframeSC.src = `https://w.soundcloud.com/player/?url=${userUrlEncoded}&color=%23ff0055&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
+      // visual=true muestra lista de canciones
+    }
+
+    window.onload = () => {
+      actualizarTopYoutube();
+      actualizarSoundcloudLista();
+    };
+  </script>
+
 </body>
 </html>
