@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Whymas</title>
 
-  <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap" rel="stylesheet" />
 
@@ -32,6 +33,31 @@
       background-attachment: fixed;
       overflow-x: hidden;
       position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.65;
+      filter: drop-shadow(0 0 7px rgba(0, 255, 140, 0.35));
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
     }
 
     h1 {
@@ -120,45 +146,102 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 <body>
+  <canvas id="matrix-canvas" aria-hidden="true"></canvas>
+  <main class="content">
+    <h1>WHYMAS</h1>
+    <p>PURA MIERDA DE LA BUENA</p>
 
-  <h1>WHYMAS</h1>
-  <p>PURA MIERDA DE LA BUENA 👽</p>
+    <a
+      id="youtube-video"
+      href="https://www.youtube.com/watch?v=v1AAa-iGx80"
+      target="_blank"
+      rel="noopener noreferrer"
+      style="display: inline-block; margin-top: 30px; width: 90%; max-width: 600px;">
+      <img
+        src="https://i.ytimg.com/vi/v1AAa-iGx80/hqdefault.jpg"
+        alt="Portada del video de YouTube"
+        style="display: block; width: 100%; height: 315px; object-fit: cover; border: 2px solid #00ff66; border-radius: 15px; box-shadow: 0 0 15px #00ff66;" />
+    </a>
 
-  <iframe src="https://www.youtube.com/embed/OfgQFoJKJjk" allowfullscreen></iframe>
+    <div class="links">
+      <a href="https://www.youtube.com/channel/UCDBk6MMaxQ0F8mARONsW1lg" target="_blank" rel="noopener noreferrer">YouTube</a>
+      <a href="https://www.instagram.com/whymasz" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="https://www.tiktok.com/@whyymass" target="_blank" rel="noopener noreferrer">TikTok</a>
+    </div>
 
-  <div class="links">
-    <a href="https://www.youtube.com/channel/UCDBk6MMaxQ0F8mARONsW1lg" target="_blank">YouTube</a>
-    <a href="https://www.instagram.com/whymasz" target="_blank">Instagram</a>
-    <a href="https://www.tiktok.com/@whyymass" target="_blank">TikTok</a>
-  </div>
-
-  <div class="soundcloud-embed">
-    <iframe scrolling="no" frameborder="no" allow="autoplay"
-      src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/ezequiel-guaymas-959051410&color=%23ff0055&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true">
-    </iframe>
-  </div>
+    <div class="soundcloud-embed">
+      <iframe
+        src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/ezequiel-guaymas-959051410&color=%23ff0055&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"
+        scrolling="no"
+        frameborder="no"
+        allow="autoplay">
+      </iframe>
+    </div>
+  </main>
 
   <script>
-    async function actualizarTopYoutube() {
-      const apiKey = 'TU_API_KEY_YOUTUBE';  // Pega tu API Key aquí
-      const channelId = 'UCDBk6MMaxQ0F8mARONsW1lg';
+    const FALLBACK_VIDEO_ID = 'v1AAa-iGx80';
+    const CHANNEL_ID = 'UCDBk6MMaxQ0F8mARONsW1lg';
+    const MATRIX_CHARS = '01WHYMAS$#@%&*+-';
+    function ejecutarSeguro(fn) {
+      try {
+        fn();
+      } catch (error) {
+        console.error('Error controlado:', error);
+      }
+    }
+    window.onerror = () => true;
+    window.addEventListener('unhandledrejection', (event) => {
+      event.preventDefault();
+      console.error('Promise rechazada controlada:', event.reason);
+    });
+    function buildYoutubeEmbedUrl(videoId) {
+      if (!videoId) return '';
+      const origin = window.location.protocol === 'file:' ? 'https://www.youtube.com' : window.location.origin;
+      const params = new URLSearchParams({
+        rel: '0',
+        modestbranding: '1',
+        playsinline: '1',
+        origin
+      });
+      return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+    }
 
-      const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=viewCount&maxResults=1&type=video`;
+    function setYoutubeVideo(videoId) {
+      const iframeYT = document.getElementById('youtube-video');
+      if (!iframeYT || !videoId) return;
+      iframeYT.src = buildYoutubeEmbedUrl(videoId);
+    }
+
+    async function actualizarTopYoutube() {
+      const apiKey = 'TU_API_KEY_YOUTUBE'; // Reemplaza con tu API Key real
+
+      if (!apiKey || apiKey === 'TU_API_KEY_YOUTUBE') {
+        return; // Sin API key se usa el fallback
+      }
+
+      const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${CHANNEL_ID}&part=snippet,id&order=viewCount&maxResults=1&type=video`;
 
       try {
         const response = await fetch(url);
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-        if (data.items && data.items.length > 0) {
-          const videoId = data.items[0].id.videoId;
-          const iframeYT = document.querySelector('iframe[src*="youtube.com"]');
-          iframeYT.src = `https://www.youtube.com/embed/${videoId}`;
+        const data = await response.json();
+        const videoId = data?.items?.[0]?.id?.videoId;
+        if (videoId) {
+          setYoutubeVideo(videoId);
         }
       } catch (error) {
         console.error('Error al obtener video de YouTube:', error);
@@ -166,18 +249,78 @@
     }
 
     function actualizarSoundcloudLista() {
-      // Cambiar iframe SoundCloud para mostrar lista completa de canciones del usuario
       const userUrlEncoded = encodeURIComponent('https://soundcloud.com/ezequiel-guaymas-959051410');
       const iframeSC = document.querySelector('.soundcloud-embed iframe');
+      if (!iframeSC) return;
+
       iframeSC.src = `https://w.soundcloud.com/player/?url=${userUrlEncoded}&color=%23ff0055&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
-      // visual=true muestra lista de canciones
+    }
+
+    function iniciarLluviaVerde() {
+      const canvas = document.getElementById('matrix-canvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d', { alpha: true });
+      if (!ctx) return;
+
+      let width = 0;
+      let height = 0;
+      let fontSize = 16;
+      let columns = 0;
+      let drops = [];
+      let rafId = 0;
+
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        fontSize = Math.max(14, Math.floor(width / 92));
+        columns = Math.floor(width / fontSize);
+        drops = Array.from({ length: columns }, () => Math.random() * -100);
+        ctx.font = `700 ${fontSize}px monospace`;
+      }
+
+      function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = 0; i < columns; i++) {
+          const text = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
+          const x = i * fontSize;
+          const y = drops[i] * fontSize;
+
+          const alpha = 0.48 + Math.random() * 0.42;
+          ctx.fillStyle = `rgba(0, 255, 125, ${alpha})`;
+          ctx.fillText(text, x, y);
+
+          if (y > height && Math.random() > 0.975) {
+            drops[i] = Math.random() * -25;
+          }
+          drops[i] += 0.55 + Math.random() * 0.35;
+        }
+
+        rafId = window.requestAnimationFrame(draw);
+      }
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      draw();
+
+      window.addEventListener('beforeunload', () => {
+        window.cancelAnimationFrame(rafId);
+      });
     }
 
     window.onload = () => {
-      actualizarTopYoutube();
-      actualizarSoundcloudLista();
+      ejecutarSeguro(() => actualizarSoundcloudLista());
+      ejecutarSeguro(() => iniciarLluviaVerde());
     };
   </script>
-
 </body>
 </html>
